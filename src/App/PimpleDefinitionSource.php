@@ -36,7 +36,7 @@ class PimpleDefinitionSource implements DI\Definition\Source\DefinitionSource
         if (!$this->container->offsetExists($name)) {
             return null;
         }
-        return (new DI\Definition\Source\DefinitionArray([$name => $this->container->raw($name)]))
-            ->getDefinition($name);
+        $source = new DI\Definition\Source\DefinitionArray([$name => $this->container->raw($name)]);
+        return $source->getDefinition($name);
     }
 }
