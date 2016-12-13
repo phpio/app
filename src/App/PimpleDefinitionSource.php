@@ -1,0 +1,42 @@
+<?php
+/**
+ * (c) phpio
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Phpio\App;
+
+use DI;
+use Pimple;
+
+/**
+ */
+class PimpleDefinitionSource implements DI\Definition\Source\DefinitionSource
+{
+    /**
+     * @var Pimple\Container
+     */
+    private $container;
+
+    /**
+     * @param Pimple\Container $container
+     */
+    public function __construct(Pimple\Container $container)
+    {
+        $this->container = $container;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getDefinition($name)
+    {
+        if (!$this->container->offsetExists($name)) {
+            return null;
+        }
+        return (new DI\Definition\Source\DefinitionArray([$name => $this->container->raw($name)]))
+            ->getDefinition($name);
+    }
+}
