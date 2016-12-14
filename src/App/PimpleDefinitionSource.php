@@ -12,6 +12,7 @@ use DI;
 use Pimple;
 
 /**
+ * Source wrapper for the Pimple\Container
  */
 class PimpleDefinitionSource implements DI\Definition\Source\DefinitionSource
 {
