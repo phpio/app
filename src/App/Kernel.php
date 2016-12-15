@@ -66,6 +66,25 @@ class Kernel
     }
 
     /**
+     * @param string $appRoot
+     * @param string $appEnv
+     *
+     * @return string[]
+     */
+    protected static function getDefinitionSources($appRoot, $appEnv)
+    {
+        $intersection = new FilesIntersection("{$appRoot}/config", "{$appRoot}/config/{$appEnv}", 'php');
+        $sources      = [];
+        foreach ($intersection as $baseConfig => $extendedConfig) {
+            $sources[] = $baseConfig;
+            if ($extendedConfig) {
+                $sources[] = $extendedConfig;
+            }
+        }
+        return $sources;
+    }
+
+    /**
      * @param array $properties
      *
      * @return static
@@ -88,17 +107,7 @@ class Kernel
             'sources' => [new PimpleDefinitionSource(new Slim\Container($appConfig))],
         ], $properties);
 
-        $intersection = new FilesIntersection(
-            "{$properties['appRoot']}/config",
-            "{$properties['appRoot']}/config/{$properties['appEnv']}",
-            'php'
-        );
-        foreach ($intersection as $baseConfig => $extendedConfig) {
-            $properties['sources'][] = $baseConfig;
-            if ($extendedConfig) {
-                $properties['sources'][] = $extendedConfig;
-            }
-        }
+        $properties['sources'] += static::getDefinitionSources($properties['appRoot'], $properties['appEnv']);
 
         // filter unsupported properties
         $properties = array_intersect_key($properties, (new static())->properties);
