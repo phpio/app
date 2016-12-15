@@ -66,6 +66,14 @@ class Kernel
     }
 
     /**
+     * @return string
+     */
+    protected static function getDefaultAppEnv()
+    {
+        return getenv('PHPIO_APP_ENV') ?: EnvironmentEnumeration::PROD;
+    }
+
+    /**
      * @param string $appRoot
      * @param string $appEnv
      *
@@ -95,6 +103,10 @@ class Kernel
             $properties['appRoot'] = static::getDefaultAppRoot();
         }
 
+        if (!isset($properties['appEnv'])) {
+            $properties['appEnv'] = static::getDefaultAppEnv();
+        }
+
         $appConfig = array_merge([
             'kernel'      => function () use (&$kernel) {
                 return $kernel;
@@ -103,7 +115,6 @@ class Kernel
         ], isset($properties['app']) ? $properties['app'] : []);
 
         $properties = array_merge([
-            'appEnv'  => getenv('PHPIO_APP_ENV') ?: EnvironmentEnumeration::PROD,
             'sources' => [new PimpleDefinitionSource(new Slim\Container($appConfig))],
         ], $properties);
 
