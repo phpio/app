@@ -93,6 +93,19 @@ class Kernel
     }
 
     /**
+     * @param string $appRoot
+     * @param string $appEnv
+     *
+     * @return Doctrine\Common\Cache\Cache
+     */
+    protected static function getDefaultDefinitionCache($appRoot, $appEnv)
+    {
+        $factory  = new DoctrineCacheFactory($appRoot);
+        $priority = $appEnv !== EnvironmentEnumeration::PROD ? [Doctrine\Common\Cache\ArrayCache::class] : null;
+        return $factory($priority);
+    }
+
+    /**
      * @param array $properties
      *
      * @return static
@@ -107,6 +120,13 @@ class Kernel
             $properties['appEnv'] = static::getDefaultAppEnv();
         }
 
+        $appRoot = $properties['appRoot'];
+        $appEnv  = $properties['appEnv'];
+
+        if (!isset($properties['definitionCache'])) {
+            $properties['definitionCache'] = static::getDefaultDefinitionCache($appRoot, $appEnv);
+        }
+
         $appConfig = array_merge([
             'kernel'      => function () use (&$kernel) {
                 return $kernel;
@@ -118,7 +138,7 @@ class Kernel
             'sources' => [new PimpleDefinitionSource(new Slim\Container($appConfig))],
         ], $properties);
 
-        $properties['sources'] += static::getDefinitionSources($properties['appRoot'], $properties['appEnv']);
+        $properties['sources'] += static::getDefinitionSources($appRoot, $appEnv);
 
         // filter unsupported properties
         $properties = array_intersect_key($properties, (new static())->properties);
