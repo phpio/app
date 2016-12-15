@@ -52,6 +52,20 @@ class Kernel
     ];
 
     /**
+     * @return string
+     */
+    protected static function getDefaultAppRoot()
+    {
+        // installed as composer dependency
+        $appRoot = dirname(dirname(dirname(dirname(dirname(__DIR__))))) . '/app';
+        if (!file_exists($appRoot)) {
+            // git clone
+            $appRoot = dirname(dirname(__DIR__)) . '/app';
+        }
+        return $appRoot;
+    }
+
+    /**
      * @param array $properties
      *
      * @return static
@@ -59,12 +73,7 @@ class Kernel
     public static function fromEnvironment(array $properties = [])
     {
         if (!isset($properties['appRoot'])) {
-            // installed as composer dependency
-            $properties['appRoot'] = dirname(dirname(dirname(dirname(dirname(__DIR__))))) . '/app';
-            if (!file_exists($properties['appRoot'])) {
-                // git clone
-                $properties['appRoot'] = dirname(dirname(__DIR__)) . '/app';
-            }
+            $properties['appRoot'] = static::getDefaultAppRoot();
         }
 
         $appConfig = array_merge([
