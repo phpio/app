@@ -12,6 +12,7 @@ use DI;
 use Doctrine;
 use Interop;
 use Phpio;
+use Slim;
 
 /**
  * @property-read string                                    $appRoot
@@ -59,15 +60,23 @@ class Kernel
     {
         if (!isset($properties['appRoot'])) {
             // installed as composer dependency
-            $properties['appRoot'] = dirname(dirname(dirname(dirname(dirname(__DIR__))))). '/app';
+            $properties['appRoot'] = dirname(dirname(dirname(dirname(dirname(__DIR__))))) . '/app';
             if (!file_exists($properties['appRoot'])) {
                 // git clone
                 $properties['appRoot'] = dirname(dirname(__DIR__)) . '/app';
             }
         }
+
+        $appConfig = array_merge([
+            'kernel'      => function () use (&$kernel) {
+                return $kernel;
+            },
+            static::class => DI\get('kernel'),
+        ], isset($properties['app']) ? $properties['app'] : []);
+
         $properties = array_merge([
             'appEnv'  => getenv('PHPIO_APP_ENV') ?: EnvironmentEnumeration::PROD,
-            'sources' => []
+            'sources' => [new PimpleDefinitionSource(new Slim\Container($appConfig))],
         ], $properties);
 
         $intersection = new FilesIntersection(
@@ -81,7 +90,11 @@ class Kernel
                 $properties['sources'][] = $extendedConfig;
             }
         }
-        return new static($properties);
+
+        // filter unsupported properties
+        $properties = array_intersect_key($properties, (new static())->properties);
+        $kernel     = new static($properties);
+        return $kernel;
     }
 
     /**
