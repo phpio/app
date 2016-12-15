@@ -11,14 +11,29 @@ use Phpio;
 use Slim;
 
 /**
+ * @property-read Phpio\App\Kernel $kernel
  */
 class App extends Slim\App
 {
     /**
-     * @param Phpio\App\Kernel|null $kernel
+     * @param Phpio\App\Kernel|array|null $kernel
      */
-    public function __construct(Phpio\App\Kernel $kernel = null)
+    public function __construct($kernel = null)
     {
-        parent::__construct(call_user_func($kernel ? : Phpio\App\Kernel::fromEnvironment()));
+        $kernel = $kernel ?: [];
+        if (is_array($kernel)) {
+            $kernel = Phpio\App\Kernel::fromEnvironment($kernel);
+        }
+        parent::__construct($kernel());
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return mixed
+     */
+    public function __get($name)
+    {
+        return $this->getContainer()->get($name);
     }
 }
