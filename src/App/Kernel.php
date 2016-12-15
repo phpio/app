@@ -7,25 +7,26 @@
  */
 
 namespace Phpio\App;
+
 use DI;
 use Doctrine;
 use Interop;
 use Phpio;
-use Slim;
 
 /**
- * @property-read string                                                  $environment
+ * @property-read string                                    $appRoot
+ * @property-read string                                    $appEnv
  *
  * @see DI\ContainerBuilder Configuration properties for builder. NULL guesses default values.
  *
- * @property-read null|string                                             $containerClass
- * @property-read null|bool                                               $useAutowiring
- * @property-read null|bool                                               $useAnnotations
- * @property-read null|bool                                               $ignorePhpDocErrors
- * @property-read null|false|string                                       $proxyDirectory
- * @property-read null|Doctrine\Common\Cache\Cache                        $definitionCache
- * @property-read null|string|array|DI\Definition\Source\DefinitionSource $definitions
- * @property-read null|Interop\Container\ContainerInterface               $wrapperContainer
+ * @property-read null|string                               $containerClass
+ * @property-read null|bool                                 $useAutowiring
+ * @property-read null|bool                                 $useAnnotations
+ * @property-read null|bool                                 $ignorePhpDocErrors
+ * @property-read null|false|string                         $proxyDirectory
+ * @property-read null|Doctrine\Common\Cache\Cache          $definitionCache
+ * @property-read null|Interop\Container\ContainerInterface $wrapperContainer
+ * @property-read DI\Definition\Source\DefinitionSource[]   $sources
  */
 class Kernel
 {
@@ -35,7 +36,8 @@ class Kernel
      * @var array
      */
     protected $properties = [
-        'environment'        => null,
+        'appRoot'            => null,
+        'appEnv'             => null,
 
         /* @see DI\ContainerBuilder */
         'containerClass'     => null,
@@ -44,8 +46,8 @@ class Kernel
         'ignorePhpDocErrors' => null,
         'proxyDirectory'     => null,
         'definitionCache'    => null,
-        'definitions'        => null,
         'wrapperContainer'   => null,
+        'sources'            => [],
     ];
 
     /**
@@ -55,27 +57,42 @@ class Kernel
      */
     public static function fromEnvironment(array $properties = [])
     {
-        // @todo implement
-//        (new DI\ContainerBuilder())->addDefinitions([
-//            'kernel.environment' => DI\env('environment', EnvironmentEnumeration::PROD),
-//            'kernel.config'      => DI\env('environment', EnvironmentEnumeration::PROD),
-//        ])->build()->get('environment');
-        $defaults = [
-//            'wrapperContainer' => new Slim\Container(),
-        ];
+        if (!isset($properties['appRoot'])) {
+            // installed as composer dependency
+            $properties['appRoot'] = dirname(dirname(dirname(dirname(dirname(__DIR__))))). '/app';
+            if (!file_exists($properties['appRoot'])) {
+                // git clone
+                $properties['appRoot'] = dirname(dirname(__DIR__)) . '/app';
+            }
+        }
+        $properties = array_merge([
+            'appEnv'  => getenv('PHPIO_APP_ENV') ?: EnvironmentEnumeration::PROD,
+            'sources' => []
+        ], $properties);
 
-        return new static(array_merge($defaults, $properties));
+        $intersection = new FilesIntersection(
+            "{$properties['appRoot']}/config",
+            "{$properties['appRoot']}/config/{$properties['appEnv']}",
+            'php'
+        );
+        foreach ($intersection as $baseConfig => $extendedConfig) {
+            $properties['sources'][] = $baseConfig;
+            if ($extendedConfig) {
+                $properties['sources'][] = $extendedConfig;
+            }
+        }
+        return new static($properties);
     }
 
     /**
-     * @return DI\Container
+     * @return DI\FactoryInterface | DI\InvokerInterface | Interop\Container\ContainerInterface
      */
     public function __invoke()
     {
         $builder = $this->createBuilder();
 
-        if ($this->definitions) {
-            $builder->addDefinitions($this->definitions);
+        foreach ($this->sources as $source) {
+            $builder->addDefinitions($source);
         }
 
         return $builder->build();
