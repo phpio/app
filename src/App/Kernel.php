@@ -135,7 +135,7 @@ class Kernel
         ], isset($properties['app']) ? $properties['app'] : []);
 
         $properties = array_merge([
-            'sources' => [new PimpleDefinitionSource(new Slim\Container($appConfig))],
+            'sources' => [new Phpio\App\DI\PimpleDefinitionSource(new Slim\Container($appConfig))],
         ], $properties);
 
         $properties['sources'] += static::getDefinitionSources($appRoot, $appEnv);

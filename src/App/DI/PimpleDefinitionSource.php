@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Phpio\App;
+namespace Phpio\App\DI;
 
 use DI;
 use Pimple;
