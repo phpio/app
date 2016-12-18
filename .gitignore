@@ -2,6 +2,7 @@
 !app/
 !src/
 !tests/
+!web/
 !.gitignore
 !composer.json
 !LICENSE
