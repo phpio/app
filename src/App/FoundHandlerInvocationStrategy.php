@@ -8,7 +8,7 @@
 
 namespace Phpio\App;
 
-use DI;
+use Invoker;
 use Psr;
 use Slim;
 
@@ -17,17 +17,17 @@ use Slim;
  *
  * @link https://github.com/PHP-DI/Invoker
  */
-class InvocationStrategy implements Slim\Interfaces\InvocationStrategyInterface
+class FoundHandlerInvocationStrategy implements Slim\Interfaces\InvocationStrategyInterface
 {
     /**
-     * @var DI\InvokerInterface
+     * @var Invoker\InvokerInterface
      */
     private $invoker;
 
     /**
-     * @param DI\InvokerInterface $invoker
+     * @param Invoker\InvokerInterface $invoker
      */
-    public function __construct(DI\InvokerInterface $invoker)
+    public function __construct(Invoker\InvokerInterface $invoker)
     {
         $this->invoker = $invoker;
     }

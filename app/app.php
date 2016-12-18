@@ -10,8 +10,8 @@ require_once 'autoload.php';
 
 return function() {
     $app = new Phpio\App();
-    $app->get('/test', function(Slim\Http\Response $res) {
-        return $res->withJson(['it' => 'works']);
+    $app->get('/', function(Slim\Http\Response $res, $version) {
+        return $res->withJson(['version' => $version]);
     });
     $app->run();
 };

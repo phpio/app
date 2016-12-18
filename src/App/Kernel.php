@@ -122,19 +122,17 @@ class Kernel
 
         $appRoot = $properties['appRoot'];
         $appEnv  = $properties['appEnv'];
+        $kernel  = null;
 
         if (!isset($properties['definitionCache'])) {
             $properties['definitionCache'] = static::getDefaultDefinitionCache($appRoot, $appEnv);
         }
 
         $appConfig = array_merge([
-            'kernel'       => function () use (&$kernel) {
-                return $kernel;
-            },
-            static::class  => DI\get('kernel'),
-            'foundHandler' => function(DI\InvokerInterface $invoker) {
-                return new InvocationStrategy($invoker);
-            },
+            static::class                         => &$kernel,
+            FoundHandlerInvoker::class            => DI\object()->constructor(DI\get(DI\Container::class)),
+            FoundHandlerInvocationStrategy::class => DI\object()->constructor(DI\get(FoundHandlerInvoker::class)),
+            'foundHandler'                        => DI\get(FoundHandlerInvocationStrategy::class),
         ], isset($properties['app']) ? $properties['app'] : []);
 
         $properties = array_merge([
