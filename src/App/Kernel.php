@@ -128,10 +128,13 @@ class Kernel
         }
 
         $appConfig = array_merge([
-            'kernel'      => function () use (&$kernel) {
+            'kernel'       => function () use (&$kernel) {
                 return $kernel;
             },
-            static::class => DI\get('kernel'),
+            static::class  => DI\get('kernel'),
+            'foundHandler' => function(DI\InvokerInterface $invoker) {
+                return new InvocationStrategy($invoker);
+            },
         ], isset($properties['app']) ? $properties['app'] : []);
 
         $properties = array_merge([
