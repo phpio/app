@@ -25,7 +25,7 @@
       "Phpio\\": "src"
     },
     "files": [
-      "src/App/functions.php"
+      "src/App/Route/functions.php"
     ]
   },
   "autoload-dev": {
